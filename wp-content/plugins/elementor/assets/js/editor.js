@@ -1,4 +1,4 @@
-/*! elementor - v1.8.10 - 13-12-2017 */
+/*! elementor - v1.8.11 - 19-12-2017 */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var HandleAddDuplicateBehavior;
 
@@ -1667,8 +1667,6 @@ App = Marionette.Application.extend( {
 
 		this.initDialogsManager();
 
-		this.heartbeat.init();
-
 		this.ajax.init();
 	},
 
@@ -1977,6 +1975,8 @@ App = Marionette.Application.extend( {
 		this.initElements();
 
 		this.initHotKeys();
+
+		this.heartbeat.init();
 
 		var iframeRegion = new Marionette.Region( {
 			// Make sure you get the DOM object out of the jQuery object
@@ -7875,6 +7875,7 @@ ControlBaseItemView = Marionette.CompositeView.extend( {
 		this.triggerMethod( 'ready' );
 
 		this.toggleControlVisibility();
+
 		this.addTooltip();
 	},
 
@@ -9184,12 +9185,23 @@ ControlRepeaterItemView = ControlBaseItemView.extend( {
 
 	onSortStop: function( event, ui ) {
 		// Reload TinyMCE editors (if exist), it's a bug that TinyMCE content is missing after stop dragging
-		var sortedRowView = this.children.findByIndex( ui.item.index() ),
-			rowControls = sortedRowView.children;
+		var self = this,
+			sortedIndex = ui.item.index();
 
-		rowControls.each( function( control ) {
-			if ( 'wysiwyg' === control.model.get( 'type' ) ) {
-				control.render();
+		if ( -1 === sortedIndex ) {
+			return;
+		}
+
+		var sortedRowView = self.children.findByIndex( ui.item.index() ),
+			rowControls = sortedRowView.children._views;
+
+		jQuery.each( rowControls, function() {
+			if ( 'wysiwyg' === this.model.get( 'type' ) ) {
+				sortedRowView.render();
+
+				delete self.currentEditableChild;
+
+				return false;
 			}
 		} );
 	},
